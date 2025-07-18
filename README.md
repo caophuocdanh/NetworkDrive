@@ -1,9 +1,7 @@
-![Minh họa giao diện NetworkDrive](screenshot.png)
-
-# NetworkDrive
+# Network Drive
 
 <p align="center">
-  <img src="screenshot.png" alt="Minh họa giao diện NetworkDrive" width="600" />
+  <img src="screenshot.png" alt="Minh họa giao diện Network Drive" width="600" />
 </p>
 
 ## Giới thiệu
@@ -39,4 +37,4 @@
 - AI studio và ChatGPT - Diễn viên, hậu kì
 
 ---
-Nếu có thắc mắc hoặc cần hỗ trợ thì kệ, Opensource viết bằng AI nên hởi AI cho nhanh :)
+Nếu có thắc mắc hoặc cần hỗ trợ thì kệ, Opensource viết bằng AI nên hỏi AI cho nhanh :)
