@@ -2,8 +2,13 @@
 
 # NetworkDrive
 
+<p align="center">
+  <img src="screenshot.png" alt="Minh họa giao diện NetworkDrive" width="600" />
+</p>
+
 ## Giới thiệu
-NetworkDrive là một ứng dụng Windows giúp người dùng quản lý các ổ đĩa mạng (SMB Network Drive) thông qua giao diện đồ họa đơn giản. Ứng dụng cho phép liệt kê, kết nối, ngắt kết nối các ổ đĩa mạng, đồng thời hỗ trợ lưu thông tin đăng nhập (credential) cho máy chủ SMB.
+
+:computer: NetworkDrive là một ứng dụng Windows giúp người dùng quản lý các ổ đĩa mạng (SMB Network Drive) thông qua giao diện đồ họa đơn giản. Ứng dụng cho phép :mag_right: liệt kê, :link: kết nối, :electric_plug: ngắt kết nối các ổ đĩa mạng, đồng thời hỗ trợ :key: lưu thông tin đăng nhập (credential) cho máy chủ SMB.
 
 ## Tính năng chính
 - Hiển thị danh sách các ổ đĩa mạng đã kết nối.
