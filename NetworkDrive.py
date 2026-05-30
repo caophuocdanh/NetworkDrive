@@ -4,11 +4,12 @@ import win32wnet
 import win32netcon
 import win32api
 import win32file
-import win32net # Thư viện mới để lấy share
+import win32net
 import string
 import threading
 import queue
 from tkinter import font
+import keyring
 
 import sys
 import os
@@ -23,6 +24,34 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
+
+# Credential Manager functions
+def save_credential(server, username, password):
+    """Save credentials to Windows Credential Manager"""
+    try:
+        keyring.set_password("NetworkDriveManager", f"{server}:{username}", password)
+        return True
+    except Exception as e:
+        print(f"Error saving credential: {e}")
+        return False
+
+def load_credential(server, username):
+    """Load credentials from Windows Credential Manager"""
+    try:
+        password = keyring.get_password("NetworkDriveManager", f"{server}:{username}")
+        return password if password else ""
+    except Exception as e:
+        print(f"Error loading credential: {e}")
+        return ""
+
+def delete_credential(server, username):
+    """Delete credentials from Windows Credential Manager"""
+    try:
+        keyring.delete_password("NetworkDriveManager", f"{server}:{username}")
+        return True
+    except Exception as e:
+        print(f"Error deleting credential: {e}")
+        return False
 
 class NetworkDriveManager:
     def __init__(self, root):
@@ -42,7 +71,12 @@ class NetworkDriveManager:
         self.pass_var = tk.StringVar()
         self.drive_letter_var = tk.StringVar()
         self.shares_var = tk.StringVar()
-        self.reconnect_var = tk.BooleanVar(value=True) 
+        self.reconnect_var = tk.BooleanVar(value=True)
+        self.save_pass_var = tk.BooleanVar(value=False)
+        
+        # Bind server and user changes to auto-load credentials
+        self.server_var.trace("w", self._on_server_user_change)
+        self.user_var.trace("w", self._on_server_user_change)
 
         self.task_queue = queue.Queue()
         self.create_widgets()
@@ -100,19 +134,22 @@ class NetworkDriveManager:
         self.entry_pass = ttk.Entry(frame2, show='*', width=22, textvariable=self.pass_var)
         self.entry_pass.place(x=80, y=70)
         
-        self.connect_server_button = ttk.Button(frame2, text="Connect", command=self.list_shares)
-        self.connect_server_button.place(x=80, y=105)
+        self.save_pass_check = ttk.Checkbutton(frame2, text="Lưu mật khẩu", variable=self.save_pass_var)
+        self.save_pass_check.place(x=5, y=95)
         
-        ttk.Label(frame2, text="Chọn share:").place(x=5, y=140)
+        self.connect_server_button = ttk.Button(frame2, text="Connect", command=self.list_shares)
+        self.connect_server_button.place(x=80, y=120)
+        
+        ttk.Label(frame2, text="Chọn share:").place(x=5, y=155)
         self.combo_share = ttk.Combobox(frame2, state="readonly", width=18, textvariable=self.shares_var)
-        self.combo_share.place(x=80, y=140)
+        self.combo_share.place(x=80, y=155)
         
         ttk.Label(frame2, text="Ký tự ổ đĩa:").place(x=5, y=175)
         self.combo_letter = ttk.Combobox(frame2, state="readonly", width=8, textvariable=self.drive_letter_var)
         self.combo_letter.place(x=80, y=175)
         
         self.map_button = ttk.Button(frame2, text="Map Drive", command=self.map_drive)
-        self.map_button.place(x=80, y=220)
+        self.map_button.place(x=80, y=230)
 
     # --- Wrapper methods to adapt UI to logic ---
     def disconnect_selected(self):
@@ -123,6 +160,16 @@ class NetworkDriveManager:
 
     def map_drive(self):
         self.start_map_drive()
+    
+    def _on_server_user_change(self, *args):
+        """Auto-load password when server or user changes"""
+        server = self.server_var.get()
+        user = self.user_var.get()
+        if server and user:
+            password = load_credential(server, user)
+            if password:
+                self.pass_var.set(password)
+                self.save_pass_var.set(True)
 
     def set_ui_state(self, enabled):
         state = "normal" if enabled else "disabled"
@@ -156,7 +203,16 @@ class NetworkDriveManager:
             elif task['type'] == 'map':
                 if task['status'] == 'success':
                     messagebox.showinfo("Thành công", task['message'])
-                    self.pass_var.set("")
+                    if self.save_pass_var.get():
+                        server = self.server_var.get()
+                        user = self.user_var.get()
+                        password = self.pass_var.get()
+                        if save_credential(server, user, password):
+                            messagebox.showinfo("Thông báo", "Mật khẩu đã được lưu vào Credential Manager.")
+                        else:
+                            messagebox.showwarning("Cảnh báo", "Không thể lưu mật khẩu vào Credential Manager.")
+                    else:
+                        self.pass_var.set("")
                     self.start_refresh_drive_list()
                 else:
                     messagebox.showerror("Thất bại", task['message'])
